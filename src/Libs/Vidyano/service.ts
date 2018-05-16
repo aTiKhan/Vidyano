@@ -744,7 +744,7 @@ namespace Vidyano {
             return this.hooks.onConstructPersistentObject(this, result.result);
         }
 
-        async executeQuery(parent: PersistentObject, query: Query, asLookup: boolean = false, throwExceptions?: boolean): Promise<IServiceQueryResult> {
+        async executeQuery(parent: PersistentObject, query: Query, asLookup: boolean = false, throwExceptions?: boolean): Promise<Service.IQueryResult> {
             const data = this._createData("executeQuery");
             data.query = query._toServiceObject();
 
@@ -1271,12 +1271,7 @@ namespace Vidyano {
         }
     }
 
-    export enum NotificationType {
-        Error,
-        Notice,
-        OK,
-        Warning
-    }
+    export type NotificationType = Service.NotificationType;
 
     export interface IForgotPassword {
         notification: string;
