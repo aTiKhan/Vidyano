@@ -749,7 +749,7 @@ namespace Vidyano.WebComponents {
         private _lastColumnType: string;
 
         constructor(private _row: QueryGridTableDataRow) {
-            super("vi-query-grid-table-data-column", document.createElement("div"));
+            super("vi-query-grid-table-data-column");
         }
 
         get item(): Vidyano.QueryResultItem {
@@ -774,15 +774,24 @@ namespace Vidyano.WebComponents {
             return !(this._hasPendingUpdate = !this._render());
         }
 
+        private _empty() {
+            Enumerable.from(this.host.children).forEach(c => this.host.removeChild(c));
+            this._customCellTemplateInstance = this._customCellTemplateType = null;
+        }
+
+        private _setScopedStyle() {
+            Enumerable.from(this.host.children).forEach(c => {
+                c.classList.add("style-scope", "vi-query-grid");
+            });
+        }
+
         private _render(): boolean {
             if (this.column) {
                 if (this._lastColumnType !== this.column.type) {
                     const customCellTemplate = QueryGridCellTemplate.Load(this.column.type);
 
-                    if (this._customCellTemplateInstance && customCellTemplate !== this._customCellTemplate) {
-                        Vidyano.WebComponents.WebComponent.prototype.empty(this.cell);
-                        this._customCellTemplateInstance = this._customCellTemplateType = null;
-                    }
+                    if (this._customCellTemplateInstance && customCellTemplate !== this._customCellTemplate)
+                        this._empty();
 
                     this._customCellTemplate = customCellTemplate;
                     this._lastColumnType = this.column.type;
@@ -793,9 +802,7 @@ namespace Vidyano.WebComponents {
 
             if (!this._item || !this.column) {
                 if (this.hasContent) {
-                    Vidyano.WebComponents.WebComponent.prototype.empty(this.cell);
-                    this._customCellTemplateInstance = this._customCellTemplateType = null;
-
+                    this._empty();
                     this._setHasContent(false);
                 }
 
@@ -807,11 +814,12 @@ namespace Vidyano.WebComponents {
 
             const itemValue = this._item.getFullValue(this.column.name);
             if (!this._customCellTemplateInstance || this._customCellTemplateType !== this.column.type) {
-                Vidyano.WebComponents.WebComponent.prototype.empty(this.cell);
+                this._empty();
                 this._customCellTemplateInstance = this._customCellTemplate.stamp({ value: itemValue });
                 this._customCellTemplateType = this.column.type;
 
-                Polymer.dom(this.cell).appendChild(this._customCellTemplateInstance.root);
+                this.host.appendChild(this._customCellTemplateInstance.root);
+                this._setScopedStyle();
             }
             else
                 (<any>this._customCellTemplateInstance).value = itemValue;
@@ -1710,9 +1718,9 @@ namespace Vidyano.WebComponents {
 
                                 let width = parseInt(cell.column.width);
                                 if (isNaN(width)) {
-                                    width = cell.cell.offsetWidth;
+                                    width = cell.host.offsetWidth;
                                     /* If grid is not visible, don't calculate the width */
-                                    if (!width || this.offsetParent === null /* Visibility check */ || getComputedStyle(cell.cell).display === "none")
+                                    if (!width || this.offsetParent === null /* Visibility check */ || getComputedStyle(cell.host).display === "none")
                                         return layoutUpdating = true; // Layout is still updating
                                 }
 
